@@ -1,0 +1,12 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "public"
+    },
+    "assert": {
+      "assertions": {
+        "categories:pwa": ["error", 0.9]
+      }
+    }
+  }
+}

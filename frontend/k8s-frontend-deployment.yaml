@@ -1,0 +1,2 @@
+# Reference: ../k8s/frontend-deployment.yaml
+# Copy or symlink this file if you want to keep k8s manifests close to the frontend codebase.

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - AGORA_APP_ID=YOUR_AGORA_APP_ID
+      - CUSTOMER_KEY=YOUR_CUSTOMER_KEY
+      - CUSTOMER_SECRET=YOUR_CUSTOMER_SECRET
+      - GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
+    depends_on:
+      - database
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    networks:
+      - app_network
+
+  database:
+    image: mongo:5.0
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

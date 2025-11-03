@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ page.title | default: site.title }}</title>
+    <style>
+      body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial; line-height:1.6; margin: 2rem; color:#111 }
+      header { border-bottom:1px solid #eee; margin-bottom:1.5rem }
+      h1 { margin:0 0 0.25rem 0 }
+      .container { max-width:900px; margin:0 auto }
+      .features { margin-top:1rem }
+      footer { margin-top:2rem; color:#666; font-size:0.9rem }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>{{ site.title }}</h1>
+        <p>{{ site.description }}</p>
+      </header>
+      <main>
+        {{ content }}
+      </main>
+      <footer>
+        <p>View repository on <a href="https://github.com/{{ site.github.repository_nwo }}">GitHub</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

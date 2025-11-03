@@ -1,0 +1,35 @@
+{
+  "name": "vm-chat-inteng-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-platform live-streaming control center.",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "test": "jest",
+    "dev": "concurrently \"npm run start --prefix frontend\" \"vercel dev\"",
+    "postinstall": "cd frontend && npm install"
+  },
+  "dependencies": {
+    "agora-token": "^2.0.3",
+    "axios": "^1.6.0",
+    "connect-sqlite3": "^0.9.13",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "passport": "^0.5.3",
+    "passport-google-oauth20": "^2.0.0",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "jest": "^29.7.0",
+    "passport-mock-strategy": "^2.0.0",
+    "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}

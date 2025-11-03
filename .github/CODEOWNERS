@@ -1,0 +1,13 @@
+# CODEOWNERS: Define responsible teams or users for specific parts of the repo
+# Format: <pattern> <owner> [<owner>]
+
+# Backend code and infra
+backend/ @KennethMwandiki
+k8s/ @KennethMwandiki
+scripts/ @KennethMwandiki
+
+# Frontend UI
+frontend/ @KennethMwandiki
+
+# All CI/CD and workflows
+.github/workflows/ @KennethMwandiki
