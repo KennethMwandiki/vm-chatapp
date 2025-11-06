@@ -12,7 +12,18 @@ const StreamingComponent: React.FC = () => {
         setSelectedPlatforms={setSelectedPlatforms}
       />
       <button
-        onClick={() => startBroadcast("GlobalEventChannel", "STREAM_TOKEN", selectedPlatforms)}
+        onClick={async () => {
+          try {
+            const response = await fetch("/generate-token/GlobalEventChannel");
+            if (!response.ok) {
+              throw new Error("Failed to fetch stream token");
+            }
+            const { token } = await response.json();
+            startBroadcast("GlobalEventChannel", token, selectedPlatforms);
+          } catch (error) {
+            alert("Error starting broadcast: " + error.message);
+          }
+        }}
         className="btn-pwa"
         disabled={selectedPlatforms.length === 0}
       >

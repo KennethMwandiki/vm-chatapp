@@ -32,7 +32,7 @@ const IntegratedDashboard: React.FC = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch("http://localhost:3000/stream-metrics", {
+        const response = await fetch("/stream-metrics", {
           headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
         });
         const data = await response.json();

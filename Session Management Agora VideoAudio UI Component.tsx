@@ -6,7 +6,7 @@ const VideoSessionComponent: React.FC = () => {
 
   useEffect(() => {
     const initializeClient = async () => {
-      const response = await fetch("http://localhost:3000/generate-token/TestChannel", {
+      const response = await fetch("/generate-token/TestChannel", {
         headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
       const { token } = await response.json();
@@ -14,7 +14,7 @@ const VideoSessionComponent: React.FC = () => {
       const agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
       setClient(agoraClient);
 
-      await agoraClient.join("YOUR_AGORA_APP_ID", "TestChannel", token);
+      await agoraClient.join(import.meta.env.VITE_AGORA_APP_ID, "TestChannel", token);
       const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
       const localVideoTrack = await AgoraRTC.createCameraVideoTrack();
 
