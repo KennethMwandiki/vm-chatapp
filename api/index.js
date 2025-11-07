@@ -1,37 +1,29 @@
 require('dotenv').config();
 
-const DB_PATH = "/tmp/sessions.db"; // Use /tmp for Vercel's writable filesystem.
-
 const express = require("express");
 const axios = require("axios");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const session = require("express-session");
-const SQLiteStore = require("connect-sqlite3")(session);
-const sqlite3 = require("sqlite3").verbose();
+const MongoStore = require('connect-mongo');
+const mongoose = require('mongoose');
 const { RtcTokenBuilder, RtcRole } = require("agora-token");
 
 // --- Database and Session Setup ---
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error("Error opening database", err.message);
-  } else {
-    console.log("Connected to the SQLite database.");
-    // Basic migration: create sessions table if it doesn't exist
-    db.run(
-      "CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, sess TEXT NOT NULL, expire INTEGER NOT NULL)",
-      (err) => {
-        if (err) console.error("Error creating sessions table", err);
-      }
-    );
-  }
-});
+const mongoUri = process.env.MONGO_URI;
+
+mongoose.connect(mongoUri)
+  .then(() => console.log('Connected to MongoDB Atlas.'))
+  .catch(err => console.error('Error connecting to MongoDB:', err));
 
 const app = express();
 
 app.use(
   session({
-    store: new SQLiteStore({ db: "sessions.db", dir: "/tmp" }), // Point to the temp directory
+    store: MongoStore.create({
+      mongoUrl: mongoUri,
+      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+    }),
     secret: process.env.SESSION_SECRET || 'a-default-secret-key',
     resave: false,
     saveUninitialized: false,
