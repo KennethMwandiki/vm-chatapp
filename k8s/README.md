@@ -3,12 +3,12 @@
 ## Prerequisites
 - Kubernetes cluster (local or cloud, e.g., Minikube, AKS, GKE, EKS)
 - `kubectl` installed and configured
-- Docker images for backend and frontend (replace image names in YAMLs if needed)
+- Your Docker images pushed to a container registry (e.g., GHCR).
 
 ## Files
 - `mongo-deployment.yaml`: MongoDB deployment and service
-- `backend-deployment.yaml`: Node.js backend deployment and NodePort service
-- `frontend-deployment.yaml`: NGINX frontend deployment and LoadBalancer service
+- `backend-deployment.yaml`: Node.js backend deployment and service.
+- `frontend-deployment.yaml`: NGINX frontend deployment and service.
 - `deploy.sh`: Bash script to deploy all resources
 
 ## Deployment Steps
@@ -31,7 +31,6 @@
 
 ## About
 -----
-
 Broadcast to all major platforms at once — simple, fast, and reliable live streaming. Use these Kubernetes manifests to deploy the containerized frontend, backend, and MongoDB for production-grade live streaming with failover and scale.
 
 4. **Access the services:**

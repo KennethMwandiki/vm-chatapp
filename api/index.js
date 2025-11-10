@@ -16,6 +16,29 @@ mongoose.connect(mongoUri)
   .then(() => console.log('Connected to MongoDB Atlas.'))
   .catch(err => console.error('Error connecting to MongoDB:', err));
 
+// --- Mongoose Schema and Model for Streams ---
+const streamSchema = new mongoose.Schema({
+  streamId: { type: String, required: true, unique: true },
+  userId: { type: String, required: true, index: true }, // To associate streams with users
+  platformsList: [String],
+  streamQuality: { type: Number, default: 100 },
+  viewerCount: { type: Number, default: 0 },
+  durationSec: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true },
+}, { timestamps: true }); // Add createdAt and updatedAt timestamps
+
+const Stream = mongoose.model('Stream', streamSchema);
+
+// --- Utility function to update stream duration ---
+const updateStreamDurations = async () => {
+  try {
+    await Stream.updateMany({ isActive: true }, { $inc: { durationSec: 5 } });
+  } catch (error) {
+    console.error('Error updating stream durations:', error);
+  }
+};
+setInterval(updateStreamDurations, 5000); // Update duration every 5 seconds
+
 const app = express();
 
 app.use(
@@ -128,48 +151,22 @@ app.get("/generate-token/:channelName", ensureAuthenticated, async (req, res) =>
   }
 });
 
-// API: Fetch Stream Metrics
-const streamMetricsProducer = {
-    streams: [],
-    init() {
-        // Initial streams can be empty, populated by webhooks
-    },
-    createStream(id) {
-        return {
-            streamId: id,
-            platformsList: [],
-            streamQuality: 100,
-            viewerCount: 0,
-            durationSec: 0,
-        };
-    },
-    updateMetrics() {
-        this.streams.forEach(stream => {
-            stream.viewerCount += Math.floor(Math.random() * 20) - 10; // Fluctuate viewers
-            if (stream.viewerCount < 0) stream.viewerCount = 0;
-            stream.durationSec += 5;
-            stream.streamQuality = 95 + Math.random() * 5; // Fluctuate quality
-        });
-    }
-    // updateMetrics can be called from a webhook handler now
-};
-streamMetricsProducer.init();
-
 app.get("/stream-metrics", ensureAuthenticated, async (req, res) => {
   try {
-    // Using the in-memory producer for more realistic data
-    const streams = streamMetricsProducer.streams;
+    // Fetch active streams for the logged-in user from MongoDB
+    const streams = await Stream.find({ userId: req.user.id, isActive: true });
     res.json({
       success: true,
       metrics: streams.map((stream) => ({
         streamId: stream.streamId,
-        platforms: stream.platformsList,
+        platforms: stream.platformsList || [],
         quality: `${stream.streamQuality.toFixed(2)}%`,
         viewers: stream.viewerCount,
         duration: stream.durationSec,
       })),
     });
   } catch (error) {
+    console.error("Error fetching stream metrics:", error);
     res.status(500).json({ error: "Failed to fetch stream metrics" });
   }
 });
@@ -179,6 +176,16 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
   const { platform, channel, token } = req.body;
 
   try {
+    // Create or update a stream record in MongoDB
+    await Stream.findOneAndUpdate(
+      { streamId: channel, userId: req.user.id },
+      { 
+        $addToSet: { platformsList: platform }, // Add platform if not already present
+        isActive: true 
+      },
+      { upsert: true, new: true } // Create if it doesn't exist
+    );
+
     // Example: Add integration logic for each platform
     if (platform === "YouTube") {
       // Call YouTube Live API or RTMP endpoint
@@ -212,6 +219,7 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
     // For demo, just return success
     res.json({ success: true, started: true, platform });
   } catch (error) {
+    console.error(`Error starting stream on ${platform}:`, error);
     res.status(500).json({ error: `Failed to start stream on ${platform}` });
   }
 });
@@ -222,25 +230,31 @@ app.post("/api/webhooks/agora", express.json({ type: '*/*' }), (req, res) => {
 
   console.log("Received webhook events:", JSON.stringify(events, null, 2));
 
-  events.forEach(event => {
-    const { streamId, eventType, payload } = event;
-    if (!streamId || !eventType) {
-      return; // Ignore invalid events
-    }
+  for (const event of events) {
+      const { streamId, eventType, payload, userId } = event; // Assuming userId might come in webhook
+      if (!streamId || !eventType) {
+        continue; // Ignore invalid events
+      }
 
-    let stream = streamMetricsProducer.streams.find(s => s.streamId === streamId);
-    if (!stream) {
-      stream = streamMetricsProducer.createStream(streamId);
-      streamMetricsProducer.streams.push(stream);
-    }
+      try {
+        const update = {};
+        if (eventType === 'viewer_join' || eventType === 'viewer_leave') {
+          update.viewerCount = payload.count;
+        } else if (eventType === 'stream_quality_update') {
+          update.streamQuality = payload.quality;
+        } else if (eventType === 'stream_ended') {
+          update.isActive = false;
+        }
 
-    // Example event processing
-    if (eventType === 'viewer_join') {
-      stream.viewerCount = payload.count;
-    } else if (eventType === 'stream_quality_update') {
-      stream.streamQuality = payload.quality;
-    }
-  });
+        if (Object.keys(update).length > 0) {
+          // Find and update the stream in the database
+          // Using upsert can create a stream record if it starts from a webhook
+          await Stream.findOneAndUpdate({ streamId }, update, { upsert: true, setDefaultsOnInsert: true });
+        }
+      } catch (error) {
+        console.error(`Error processing webhook for stream ${streamId}:`, error);
+      }
+  }
 
   res.status(200).send("OK");
 });

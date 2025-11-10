@@ -65,6 +65,7 @@ jobs:
             --from-literal=GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' \
             --from-literal=GOOGLE_CLIENT_SECRET='${{ secrets.GOOGLE_CLIENT_SECRET }}' \
             --from-literal=MONGO_URI='${{ secrets.MONGO_URI }}' \
+            --from-literal=AGORA_CUSTOMER_SECRET='${{ secrets.AGORA_CUSTOMER_SECRET }}' \
             --from-literal=VITE_AGORA_APP_ID='${{ secrets.VITE_AGORA_APP_ID }}' \
             --from-literal=AGORA_APP_ID='${{ secrets.VITE_AGORA_APP_ID }}' \
             --from-literal=BASE_URL='${{ secrets.BASE_URL }}' \
@@ -73,3 +74,15 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/
+
+  smoke-test:
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check application health
+        run: |
+          echo "Pinging health endpoint at ${{ secrets.BASE_URL }}/healthz"
+          # Wait a moment for services to be fully available after ingress update
+          sleep 20
+          curl -f --connect-timeout 10 --max-time 20 "${{ secrets.BASE_URL }}/healthz"
