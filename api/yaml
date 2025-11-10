@@ -1,0 +1,10 @@
+# c:\Users\User\Downloads\vm-chatapp\k8s\backend-deployment.yaml
+
+      containers:
+        - name: backend
+          image: ghcr.io/kennethmwandiki/vm-chatapp-backend:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: vm-chatapp-secrets

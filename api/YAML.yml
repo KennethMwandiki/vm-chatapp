@@ -1,0 +1,14 @@
+# c:\Users\User\Downloads\vm-chatapp\k8s\ci.yml
+
+      - name: Create or update Kubernetes secret
+        run: |
+          kubectl create secret generic vm-chatapp-secrets \
+            --from-literal=SESSION_SECRET='${{ secrets.SESSION_SECRET }}' \
+            --from-literal=GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' \
+            --from-literal=GOOGLE_CLIENT_SECRET='${{ secrets.GOOGLE_CLIENT_SECRET }}' \
+            --from-literal=MONGO_URI='${{ secrets.MONGO_URI }}' \
+            --from-literal=AGORA_CUSTOMER_SECRET='${{ secrets.AGORA_CUSTOMER_SECRET }}' \
+            --from-literal=VITE_AGORA_APP_ID='${{ secrets.VITE_AGORA_APP_ID }}' \
+            --from-literal=AGORA_APP_ID='${{ secrets.VITE_AGORA_APP_ID }}' \
+            --from-literal=BASE_URL='${{ secrets.BASE_URL }}' \
+            -o yaml --dry-run=client | kubectl apply -f -
