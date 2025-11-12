@@ -248,8 +248,14 @@ app.post("/api/webhooks/agora", express.json({ type: '*/*' }), (req, res) => {
 
         if (Object.keys(update).length > 0) {
           // Find and update the stream in the database
-          // Using upsert can create a stream record if it starts from a webhook
-          await Stream.findOneAndUpdate({ streamId }, update, { upsert: true, setDefaultsOnInsert: true });
+          // It's important to use userId here if the webhook provides it,
+          // to ensure the correct user's stream is updated.
+          // Using upsert can create a stream record if it starts from a webhook.
+          await Stream.findOneAndUpdate(
+            { streamId, userId },
+            update,
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
         }
       } catch (error) {
         console.error(`Error processing webhook for stream ${streamId}:`, error);
