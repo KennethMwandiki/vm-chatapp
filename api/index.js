@@ -204,7 +204,7 @@ app.post('/auth/register', async (req, res, next) => {
     await user.save();
     req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json({ message: "User registered and logged in.", user: { id: user.id, username: user.username } });
+        res.status(201).json({ message: "User Control: Registration successful. Modular. Scalable. Yours.", user: { id: user.id, username: user.username } });
     });
   } catch (error) {
     next(error);
@@ -212,7 +212,7 @@ app.post('/auth/register', async (req, res, next) => {
 });
 
 app.post('/auth/login', passport.authenticate('local'), (req, res) => {
-    res.json({ message: "Logged in successfully.", user: { id: req.user.id, username: req.user.username } });
+    res.json({ message: "User Control: Login successful. Always-on Reliability.", user: { id: req.user.id, username: req.user.username } });
 );
 
 // Health Check Endpoint for Deployment Readiness
@@ -250,8 +250,7 @@ app.get("/generate-token/:channelName", ensureAuthenticated, async (req, res) =>
     if (!process.env.AGORA_APP_ID || !process.env.AGORA_CUSTOMER_SECRET) {
         return res.status(500).json({ error: "Agora App ID or App Certificate is not configured." });
     }
-    const token = RtcTokenBuilder.buildTokenWithUid(process.env.AGORA_APP_ID, process.env.AGORA_CUSTOMER_SECRET, channelName, uid, role, privilegeExpires);
-    res.json({ token });
+    const token = RtcTokenBuilder.buildTokenWithUid(process.env.AGORA_APP_ID, process.env.AGORA_CUSTOMER_SECRET, channelName, uid, role, privilegeExpires);    res.json({ message: "Token generated with Instant Speed.", token });
   } catch (error) {
     console.error("Token generation error:", error);
     res.status(500).json({ error: "Failed to generate token", details: error.message });
@@ -324,10 +323,10 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
     }
 
     // For demo, just return success
-    res.json({ success: true, started: true, platform });
+    res.json({ success: true, message: `[${platform}] Stream started. Modular. Scalable. Yours.`, platform });
   } catch (error) {
     console.error(`Error starting stream on ${platform}:`, error);
-    res.status(500).json({ error: `Failed to start stream on ${platform}` });
+    res.status(500).json({ error: `Failed to start stream on ${platform}. Always-on Reliability.` });
   }
 });
 
@@ -383,7 +382,7 @@ app.post("/api/subscribe", express.json(), async (req, res) => {
     const Email = require('./models/Email');
     const newEmail = new Email({ email });
     await newEmail.save();
-    res.status(201).json({ success: true, message: "Thank you for subscribing!" });
+    res.status(201).json({ success: true, message: "Thank you for subscribing to the future of digital customization!" });
   } catch (error) {
     if (error.code === 11000) { // Duplicate key error
       return res.status(409).json({ error: "This email is already subscribed." });
