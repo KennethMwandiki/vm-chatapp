@@ -11,6 +11,7 @@ interface PlatformSelectionUIProps {
 const PlatformSelectionUI: React.FC<PlatformSelectionUIProps> = ({ allPlatforms, setAllPlatforms, selectedPlatforms, setSelectedPlatforms }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [newPlatformName, setNewPlatformName] = React.useState("");
+  const [email, setEmail] = React.useState("");
 
   const handleChange = (platform: string) => {
     if (selectedPlatforms.includes(platform)) {
@@ -18,6 +19,12 @@ const PlatformSelectionUI: React.FC<PlatformSelectionUIProps> = ({ allPlatforms,
     } else {
       setSelectedPlatforms([...selectedPlatforms, platform]);
     }
+  };
+
+  const handleEmailSubmit = () => {
+    console.log("Email submitted:", email);
+    // Here you would typically send the email to your backend
+    setEmail("");
   };
 
   return (
@@ -56,6 +63,17 @@ const PlatformSelectionUI: React.FC<PlatformSelectionUIProps> = ({ allPlatforms,
           </div>
         </div>
       )}
+
+      <div className="email-capture">
+        <h3>Stay Updated!</h3>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+        />
+        <button onClick={handleEmailSubmit}>Subscribe</button>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../api/index"); // Vercel doesn't need a running server object for tests
+const app = require("./api/index"); // Vercel doesn't need a running server object for tests
 const MockStrategy = require("passport-mock-strategy");
 const passport = require("passport");
 
