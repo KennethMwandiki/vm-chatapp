@@ -1,6 +1,4 @@
-# CODEOWNERS: Define responsible teams or users for specific parts of the repo.
-# This file assigns ownership for all files in the repository to ensure
-# code reviews are automatically requested.
-#
-# Format: <pattern> <owner> [<owner>...]
 * @KennethMwandiki
+/backend/ @KennethMwandiki
+/frontend/ @KennethMwandiki
+/k8s/ @KennethMwandiki
