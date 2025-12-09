@@ -34,14 +34,7 @@ const streamSchema = new mongoose.Schema({
 const Stream = mongoose.model('Stream', streamSchema);
 
 // --- Utility function to update stream duration ---
-const updateStreamDurations = async () => {
-  try {
-    await Stream.updateMany({ isActive: true }, { $inc: { durationSec: 5 } });
-  } catch (error) {
-    console.error('Error updating stream durations:', error);
-  }
-};
-setInterval(updateStreamDurations, 5000); // Update duration every 5 seconds
+
 
 const app = express();
 
@@ -81,17 +74,17 @@ const hasRole = (roleName) => (req, res, next) => {
 };
 
 const hasAdminRoles = (req, res, next) => {
-    if (req.isAuthenticated() && req.user.role && ['Admin', 'Super Admin'].includes(req.user.role.name)) {
-        return next();
-    }
-    res.status(403).json({ error: "Forbidden: Administrator access required." });
+  if (req.isAuthenticated() && req.user.role && ['Admin', 'Super Admin'].includes(req.user.role.name)) {
+    return next();
+  }
+  res.status(403).json({ error: "Forbidden: Administrator access required." });
 };
 
 const isSuperAdmin = (req, res, next) => {
-    if (req.isAuthenticated() && req.user.role && req.user.role.name === 'Super Admin') {
-        return next();
-    }
-    res.status(403).json({ error: "Forbidden: Super Admin access required." });
+  if (req.isAuthenticated() && req.user.role && req.user.role.name === 'Super Admin') {
+    return next();
+  }
+  res.status(403).json({ error: "Forbidden: Super Admin access required." });
 };
 // --- Passport (Google OAuth) Setup ---
 passport.serializeUser((user, done) => {
@@ -183,7 +176,7 @@ app.get(
 );
 
 app.get('/auth/logout', (req, res, next) => {
-  req.logout(function(err) {
+  req.logout(function (err) {
     if (err) { return next(err); }
     res.redirect('/');
   });
@@ -195,16 +188,16 @@ app.post('/auth/register', async (req, res, next) => {
     const { username, password, email } = req.body;
     let userRole = await Role.findOne({ name: 'User' });
     if (!userRole) {
-        // Seed roles if they don't exist
-        await Role.insertMany([{ name: 'User' }, { name: 'Admin' }, { name: 'Super Admin' }]);
-        userRole = await Role.findOne({ name: 'User' });
+      // Seed roles if they don't exist
+      await Role.insertMany([{ name: 'User' }, { name: 'Admin' }, { name: 'Super Admin' }]);
+      userRole = await Role.findOne({ name: 'User' });
     }
     const user = new User({ username, email, role: userRole._id });
     await user.setPassword(password);
     await user.save();
     req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json({ message: "User Control: Registration successful. Modular. Scalable. Yours.", user: { id: user.id, username: user.username } });
+      if (err) return next(err);
+      res.status(201).json({ message: "User Control: Registration successful. Modular. Scalable. Yours.", user: { id: user.id, username: user.username } });
     });
   } catch (error) {
     next(error);
@@ -212,7 +205,7 @@ app.post('/auth/register', async (req, res, next) => {
 });
 
 app.post('/auth/login', passport.authenticate('local'), (req, res) => {
-    res.json({ message: "User Control: Login successful. Always-on Reliability.", user: { id: req.user.id, username: req.user.username } });
+  res.json({ message: "User Control: Login successful. Always-on Reliability.", user: { id: req.user.id, username: req.user.username } });
 );
 
 // Health Check Endpoint for Deployment Readiness
@@ -248,9 +241,9 @@ app.get("/generate-token/:channelName", ensureAuthenticated, async (req, res) =>
 
   try {
     if (!process.env.AGORA_APP_ID || !process.env.AGORA_CUSTOMER_SECRET) {
-        return res.status(500).json({ error: "Agora App ID or App Certificate is not configured." });
+      return res.status(500).json({ error: "Agora App ID or App Certificate is not configured." });
     }
-    const token = RtcTokenBuilder.buildTokenWithUid(process.env.AGORA_APP_ID, process.env.AGORA_CUSTOMER_SECRET, channelName, uid, role, privilegeExpires);    res.json({ message: "Token generated with Instant Speed.", token });
+    const token = RtcTokenBuilder.buildTokenWithUid(process.env.AGORA_APP_ID, process.env.AGORA_CUSTOMER_SECRET, channelName, uid, role, privilegeExpires); res.json({ message: "Token generated with Instant Speed.", token });
   } catch (error) {
     console.error("Token generation error:", error);
     res.status(500).json({ error: "Failed to generate token", details: error.message });
@@ -263,13 +256,20 @@ app.get("/stream-metrics", ensureAuthenticated, async (req, res) => {
     const streams = await Stream.find({ userId: req.user.id, isActive: true });
     res.json({
       success: true,
-      metrics: streams.map((stream) => ({
-        streamId: stream.streamId,
-        platforms: stream.platformsList || [],
-        quality: `${stream.streamQuality.toFixed(2)}%`,
-        viewers: stream.viewerCount,
-        duration: stream.durationSec,
-      })),
+      metrics: streams.map((stream) => {
+        let duration = stream.durationSec;
+        if (stream.isActive && stream.createdAt) {
+          const startTime = new Date(stream.createdAt).getTime();
+          duration = Math.floor((Date.now() - startTime) / 1000);
+        }
+        return {
+          streamId: stream.streamId,
+          platforms: stream.platformsList || [],
+          quality: `${stream.streamQuality.toFixed(2)}%`,
+          viewers: stream.viewerCount,
+          duration: duration,
+        };
+      }),
     });
   } catch (error) {
     console.error("Error fetching stream metrics:", error);
@@ -285,9 +285,9 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
     // Create or update a stream record in MongoDB
     await Stream.findOneAndUpdate(
       { streamId: channel, userId: req.user.id },
-      { 
+      {
         $addToSet: { platformsList: platform }, // Add platform if not already present
-        isActive: true 
+        isActive: true
       },
       { upsert: true, new: true } // Create if it doesn't exist
     );
@@ -337,35 +337,41 @@ app.post("/api/webhooks/agora", express.json({ type: '*/*' }), async (req, res) 
   console.log("Received webhook events:", JSON.stringify(events, null, 2));
 
   for (const event of events) {
-      const { streamId, eventType, payload, userId } = event; // Assuming userId might come in webhook
-      if (!streamId || !eventType) {
-        continue; // Ignore invalid events
+    const { streamId, eventType, payload, userId } = event; // Assuming userId might come in webhook
+    if (!streamId || !eventType) {
+      continue; // Ignore invalid events
+    }
+
+    try {
+      const update = {};
+      if (eventType === 'viewer_join' || eventType === 'viewer_leave') {
+        update.viewerCount = payload.count;
+      } else if (eventType === 'stream_quality_update') {
+        update.streamQuality = payload.quality;
+      } else if (eventType === 'stream_ended') {
+        update.isActive = false;
+        // Calculate and finalize duration
+        const stream = await Stream.findOne({ streamId });
+        if (stream && stream.createdAt) {
+          const startTime = new Date(stream.createdAt).getTime();
+          update.durationSec = Math.floor((Date.now() - startTime) / 1000);
+        }
       }
 
-      try {
-        const update = {};
-        if (eventType === 'viewer_join' || eventType === 'viewer_leave') {
-          update.viewerCount = payload.count;
-        } else if (eventType === 'stream_quality_update') {
-          update.streamQuality = payload.quality;
-        } else if (eventType === 'stream_ended') {
-          update.isActive = false;
-        }
-
-        if (Object.keys(update).length > 0) {
-          // Find and update the stream in the database
-          // It's important to use userId here if the webhook provides it,
-          // to ensure the correct user's stream is updated.
-          // Using upsert can create a stream record if it starts from a webhook.
-          await Stream.findOneAndUpdate(
-            { streamId, userId },
-            update,
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-          );
-        }
-      } catch (error) {
-        console.error(`Error processing webhook for stream ${streamId}:`, error);
+      if (Object.keys(update).length > 0) {
+        // Find and update the stream in the database
+        // It's important to use userId here if the webhook provides it,
+        // to ensure the correct user's stream is updated.
+        // Using upsert can create a stream record if it starts from a webhook.
+        await Stream.findOneAndUpdate(
+          { streamId, userId },
+          update,
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
       }
+    } catch (error) {
+      console.error(`Error processing webhook for stream ${streamId}:`, error);
+    }
   }
 
   res.status(200).send("OK");
@@ -394,26 +400,26 @@ app.post("/api/subscribe", express.json(), async (req, res) => {
 
 // --- Admin Routes ---
 app.get('/api/admin/users', ensureAuthenticated, hasAdminRoles, async (req, res) => {
-    try {
-        const users = await User.find({}, '-password').populate('role');
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch users.' });
-    }
+  try {
+    const users = await User.find({}, '-password').populate('role');
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users.' });
+  }
 });
 
 app.put('/api/admin/users/:userId/role', ensureAuthenticated, isSuperAdmin, async (req, res) => {
-    try {
-        const { roleName } = req.body;
-        const role = await Role.findOne({ name: roleName });
-        if (!role) return res.status(400).json({ error: 'Invalid role.' });
+  try {
+    const { roleName } = req.body;
+    const role = await Role.findOne({ name: roleName });
+    if (!role) return res.status(400).json({ error: 'Invalid role.' });
 
-        const user = await User.findByIdAndUpdate(req.params.userId, { role: role._id }, { new: true });
-        if (!user) return res.status(404).json({ error: 'User not found.' });
-        res.json({ message: `User ${user.username}'s role updated to ${role.name}.`});
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update user role.' });
-    }
+    const user = await User.findByIdAndUpdate(req.params.userId, { role: role._id }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json({ message: `User ${user.username}'s role updated to ${role.name}.` });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user role.' });
+  }
 });
 
 // --- Start the Server ---
