@@ -292,41 +292,64 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
       { upsert: true, new: true } // Create if it doesn't exist
     );
 
-    // Example: Add integration logic for each platform
+    // --- Platform Integration Logic ---
+    let statusMsg = "";
+
+    const checkConfig = (key, name) => {
+      if (!process.env[key]) return `Missing configuration for ${name}`;
+      return null;
+    };
+
     if (platform === "YouTube") {
-      // Call YouTube Live API or RTMP endpoint
-      // await axios.post('https://youtube.googleapis.com/youtube/v3/liveBroadcasts', ...)
+      const err = checkConfig("YOUTUBE_STREAM_KEY", "YouTube");
+      if (err) throw new Error(err);
+      // Actual integration would use: axios.post('https://www.googleapis.com/...', { streamId: channel, ... })
+      statusMsg = "Initiated YouTube stream (Simulated)";
+
     } else if (platform === "Facebook") {
-      // Call Facebook Live API or RTMP endpoint
+      const err = checkConfig("FACEBOOK_STREAM_KEY", "Facebook");
+      if (err) throw new Error(err);
+      statusMsg = "Initiated Facebook stream (Simulated)";
+
     } else if (platform === "Twitch") {
-      // Call Twitch API or RTMP endpoint
+      const err = checkConfig("TWITCH_STREAM_KEY", "Twitch");
+      if (err) throw new Error(err);
+      statusMsg = "Initiated Twitch stream (Simulated)";
+
     } else if (platform === "Instagram") {
-      // Instagram Live integration (usually via RTMP)
+      const err = checkConfig("INSTAGRAM_STREAM_KEY", "Instagram");
+      if (err) throw new Error(err);
+      statusMsg = "Initiated Instagram stream (Simulated)";
+
     } else if (platform === "LinkedIn") {
-      // LinkedIn Live API
+      const err = checkConfig("LINKEDIN_STREAM_KEY", "LinkedIn");
+      if (err) throw new Error(err);
+      statusMsg = "Initiated LinkedIn stream (Simulated)";
+
     } else if (platform === "Twitter (X)") {
-      // X (Twitter) Live API or RTMP endpoint
-    } else if (platform === "WeChat") {
-      // WeChat streaming integration (custom or via RTMP)
-    } else if (platform === "Kick") {
-      // Kick streaming integration
-    } else if (platform === "Trovo") {
-      // Trovo streaming integration
-    } else if (platform === "DLive") {
-      // DLive streaming integration
-    } else if (platform === "Vimeo") {
-      // Vimeo Live API
+      const err = checkConfig("TWITTER_STREAM_KEY", "Twitter (X)");
+      if (err) throw new Error(err);
+      statusMsg = "Initiated Twitter stream (Simulated)";
+
     } else if (platform === "TikTok") {
-      // TikTok Live integration
-    } else if (platform === "Custom RTMP") {
-      // Use RTMP URL provided by user
+      const err = checkConfig("TIKTOK_STREAM_KEY", "TikTok");
+      if (err) throw new Error(err);
+      statusMsg = "Initiated TikTok stream (Simulated)";
+
+    } else {
+      // Default for others (Kick, Trovo, etc.) if keys are not strictly required yet
+      statusMsg = `Initiated ${platform} stream (Simulated)`;
     }
 
-    // For demo, just return success
-    res.json({ success: true, message: `[${platform}] Stream started. Modular. Scalable. Yours.`, platform });
+    res.json({
+      success: true,
+      message: `Stream started on ${platform}: ${statusMsg}`,
+      streamId: channel
+    });
+
   } catch (error) {
-    console.error(`Error starting stream on ${platform}:`, error);
-    res.status(500).json({ error: `Failed to start stream on ${platform}. Always-on Reliability.` });
+    console.error("Stream start error:", error);
+    res.status(500).json({ error: error.message || "Failed to start stream" });
   }
 });
 
