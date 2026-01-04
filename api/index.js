@@ -293,57 +293,46 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
     );
 
     // --- Platform Integration Logic ---
-    let statusMsg = "";
+    const FacebookService = require('./services/facebookService');
+    const YouTubeService = require('./services/youtubeService');
+    const GenericRtmpService = require('./services/genericRtmpService');
 
-    const checkConfig = (key, name) => {
-      if (!process.env[key]) return `Missing configuration for ${name}`;
-      return null;
-    };
+    let result = {};
 
     if (platform === "YouTube") {
-      const err = checkConfig("YOUTUBE_STREAM_KEY", "YouTube");
-      if (err) throw new Error(err);
-      // Actual integration would use: axios.post('https://www.googleapis.com/...', { streamId: channel, ... })
-      statusMsg = "Initiated YouTube stream (Simulated)";
-
+      result = await YouTubeService.startStream(channel, "Broadcast from VM Chat");
     } else if (platform === "Facebook") {
-      const err = checkConfig("FACEBOOK_STREAM_KEY", "Facebook");
-      if (err) throw new Error(err);
-      statusMsg = "Initiated Facebook stream (Simulated)";
-
-    } else if (platform === "Twitch") {
-      const err = checkConfig("TWITCH_STREAM_KEY", "Twitch");
-      if (err) throw new Error(err);
-      statusMsg = "Initiated Twitch stream (Simulated)";
-
+      result = await FacebookService.startPageStream(channel);
     } else if (platform === "Instagram") {
-      const err = checkConfig("INSTAGRAM_STREAM_KEY", "Instagram");
-      if (err) throw new Error(err);
-      statusMsg = "Initiated Instagram stream (Simulated)";
-
-    } else if (platform === "LinkedIn") {
-      const err = checkConfig("LINKEDIN_STREAM_KEY", "LinkedIn");
-      if (err) throw new Error(err);
-      statusMsg = "Initiated LinkedIn stream (Simulated)";
-
-    } else if (platform === "Twitter (X)") {
-      const err = checkConfig("TWITTER_STREAM_KEY", "Twitter (X)");
-      if (err) throw new Error(err);
-      statusMsg = "Initiated Twitter stream (Simulated)";
-
-    } else if (platform === "TikTok") {
-      const err = checkConfig("TIKTOK_STREAM_KEY", "TikTok");
-      if (err) throw new Error(err);
-      statusMsg = "Initiated TikTok stream (Simulated)";
-
+      result = await FacebookService.startInstagramStream(channel);
     } else {
-      // Default for others (Kick, Trovo, etc.) if keys are not strictly required yet
-      statusMsg = `Initiated ${platform} stream (Simulated)`;
+      // Generic / Other Platforms (Substack, Kick, Twitch, etc.)
+      // Try to find config in Generic Service first
+      const config = GenericRtmpService.getConfigFor(platform);
+      if (config) {
+        result = GenericRtmpService.startStream(platform, config.url, config.key);
+      } else {
+        // Fallback for Platforms defined in older .env schema or just checking key existence
+        // This maintains backward compatibility with the hardening we did previously
+        const keyMap = {
+          'Twitch': 'TWITCH_STREAM_KEY',
+          'LinkedIn': 'LINKEDIN_STREAM_KEY',
+          'Trovo': 'TROVO_STREAM_KEY'
+        };
+        const envKey = keyMap[platform];
+        if (envKey && process.env[envKey]) {
+          result = { message: `Simulated start for ${platform}`, key_present: true };
+        } else {
+          // If it's a platform we know nothing about
+          throw new Error(`Configuration missing for ${platform}`);
+        }
+      }
     }
 
     res.json({
       success: true,
-      message: `Stream started on ${platform}: ${statusMsg}`,
+      message: `Stream initiated on ${platform}`,
+      data: result,
       streamId: channel
     });
 
