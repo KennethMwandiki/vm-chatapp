@@ -295,6 +295,9 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
     // --- Platform Integration Logic ---
     const FacebookService = require('./services/facebookService');
     const YouTubeService = require('./services/youtubeService');
+    const LinkedInService = require('./services/linkedinService');
+    const TwitterService = require('./services/twitterService');
+    const WeChatService = require('./services/wechatService');
     const GenericRtmpService = require('./services/genericRtmpService');
 
     let result = {};
@@ -305,9 +308,14 @@ app.post("/api/stream/start", express.json(), ensureAuthenticated, async (req, r
       result = await FacebookService.startPageStream(channel);
     } else if (platform === "Instagram") {
       result = await FacebookService.startInstagramStream(channel);
+    } else if (platform === "LinkedIn") {
+      result = await LinkedInService.startStream(channel, "Live Broadcast");
+    } else if (platform === "Twitter (X)") {
+      result = await TwitterService.startStream(channel);
+    } else if (platform === "WeChat") {
+      result = await WeChatService.startStream(channel);
     } else {
       // Generic / Other Platforms (Substack, Kick, Twitch, etc.)
-      // Try to find config in Generic Service first
       const config = GenericRtmpService.getConfigFor(platform);
       if (config) {
         result = GenericRtmpService.startStream(platform, config.url, config.key);
