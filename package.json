@@ -33,16 +33,17 @@
   "devDependencies": {
     "@storybook/react-vite": "8.6.14",
     "@vitejs/plugin-react": "5.1.0",
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "passport-mock-strategy": "^2.0.0",
+    "supertest": "^7.2.2",
     "vite": "6.4.1"
   },
   "jest": {
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
       "/node_modules/"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest"
-    }
+    ]
   },
   "overrides": {
     "ts-jest": {

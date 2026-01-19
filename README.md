@@ -1,63 +1,54 @@
-# VM CHAT INTENG: Dockerized Deployment & Development Guide
+# VM Chat Control Center (Unified Vercel Monorepo)
 
-## Project Structure
+A multi-platform live-streaming control center that lets teams launch, manage, and scale real-time broadcasts to every major destination from a single, branded interface.
 
-- `/backend` — Node.js backend (API, authentication, integrations)
-- `/frontend` — React frontend (UI, static assets)
-- `/docker-compose.yml` — Multi-service orchestration
+## 🚀 Key Features
+- **Unified Dashboard**: React-based UI for managing streams, viewing metrics, and controlling sessions.
+- **Multi-Platform Support**: Native integrations for **YouTube, Facebook, Instagram, LinkedIn, Twitter (X), WeChat**, and Generic RTMP (Substack, Kick, Trovo).
+- **Secure Authentication**: Google OAuth + Local Login implementation.
+- **Real-Time Metrics**: Live viewer counts and stream quality monitoring.
+- **Vercel Deployment**: Optimized for serverless deployment (Frontend + API Functions).
 
-## Prerequisites
-- Docker & Docker Compose installed
-- Node.js & Yarn (for local dev)
+## 📂 Project Structure
+- `frontend/`: React + Vite application (The Unified Dashboard).
+- `api/`: Node.js Serverless Functions (Backend API).
+    - `services/`: Platform adapters (Facebook, YouTube, etc.).
+    - `models/`: MongoDB Schemas (User, Stream).
+- `vercel.json`: Deployment configuration.
 
-## Quick Start: All Services
+## 🛠️ Quick Start (Local)
 
-1. **Build and start all services:**
-   ```sh
-   docker-compose up --build
-   ```
-   - Backend: http://localhost:3000
-   - Frontend: http://localhost:8080
-   - MongoDB: localhost:27017
-
-2. **Stop all services:**
-   ```sh
-   docker-compose down
-   ```
-
-## Customization
-- Edit environment variables in `docker-compose.yml` or use a `.env` file.
-- Update Dockerfiles as needed for custom build steps.
-
-## Development Workflow
-
-- **Backend:**
-  - Work in `/backend`.
-  - Use `yarn dev` or `node server.js` for local dev.
-  - Build/test Docker image with `docker build .` in `/backend`.
-
-- **Frontend:**
-  - Work in `/frontend`.
-  - Use `yarn start` for local dev.
-  - Build/test Docker image with `docker build .` in `/frontend`.
-
-## API Access & Integrations
-- The backend exposes REST APIs on port 3000.
-- MongoDB is available at `mongodb://database:27017` from within containers.
-- Integrate with external platforms by extending backend logic.
-
-## Clean Up
-```sh
-docker-compose down -v
+### 1. Backend Setup
+```bash
+cd api
+npm install
+npm test # Verify API logic
 ```
+Create a `.env` file in the root based on `.env.example`.
 
----
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Access the dashboard at `http://localhost:5173`.
 
-For Kubernetes deployment, see `/k8s` folder.
+## 🌍 Vercel Deployment
 
-## About
+1.  **Environment Variables**: Add all keys from `.env.example` to your Vercel Project Settings.
+    - `MONGO_URI`, `SESSION_SECRET`
+    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+    - `FACEBOOK_PAGE_ACCESS_TOKEN`, `YOUTUBE_CLIENT_ID`, etc.
+2.  **Push to Main**: Deployment is automatic.
 
-This platform is an enterprise-ready, developer-first multi-platform live-streaming control center that lets teams launch, manage, and scale real-time broadcasts to every major destination from a single, branded interface. Built on low-latency Agora media and a modular Node/React backend, it abstracts provider complexities (YouTube, Twitch, Facebook, TikTok, X, WeChat, LinkedIn, Vimeo, custom RTMP and more) behind a simple API and one-click workflows so you can start simultaneous streams, manage sessions and chat, and monitor health and metrics with confidence. Containerized for easy deployment (Docker + Kubernetes), integrated with CI/CD for reproducible one-click publishing, and furnished with automation scripts for secure secret handling and branch protection, the platform accelerates live production while keeping governance, extensibility, and reliability front and center.
+## 🔌 API Integrations
+The backend uses a **Service Adapter Pattern** in `api/services/`:
+- **Meta**: `facebookService.js` (uses `facebook-nodejs-business-sdk`)
+- **Google**: `youtubeService.js` (uses `googleapis`)
+- **Twitter**: `twitterService.js` (uses `twitter-api-v2`)
+- **LinkedIn**: `linkedinService.js` (Direct API)
+- **Generic**: `genericRtmpService.js` (Substack, Kick, etc.)
 
 ## GitHub deployment criteria (quick checklist)
 
