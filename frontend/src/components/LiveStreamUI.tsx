@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import startBroadcast from "../utils/startBroadcast";
 import PlatformSelectionUI from "./PlatformSelectionUI";
 
-const ALL_PLATFORMS = [
+// Platforms available for broadcasting (Must match backend api/index.js keys)
+const platforms = [
     "YouTube",
     "Facebook",
     "Twitch",
@@ -10,17 +11,15 @@ const ALL_PLATFORMS = [
     "LinkedIn",
     "Twitter (X)",
     "WeChat",
+    "TikTok",
     "Kick",
     "Trovo",
-    "DLive",
-    "Vimeo",
-    "TikTok",
-    "Custom RTMP"
+    "Substack"
 ];
 
 const LiveStreamUI: React.FC = () => {
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-    const [allPlatforms, setAllPlatforms] = useState<string[]>(ALL_PLATFORMS);
+    const [allPlatforms, setAllPlatforms] = useState<string[]>(platforms);
 
     return (
         <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>
